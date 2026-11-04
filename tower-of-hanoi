@@ -1,0 +1,54 @@
+#!/usr/bin/bash
+
+RED=$'\e[31m'
+GREEN=$'\e[32m'
+ORANGE=$'\e[33m'
+CYAN=$'\e[96m'
+RESET=$'\e[0m'
+BLINK=$'\e[5m'
+
+draw() {
+    for i in $n_seq; do echo "|${A[$i]:-" "}| |${B[$i]:-" "}| |${C[$i]:-" "}|"; done
+    echo "+-+ +-+ +-+"
+    echo " A   B   C"
+}
+
+n=8
+n_seq=$(seq $((n-1)) -1 0)
+
+A=($n ${n_seq[@]}) B=() C=()
+unset A[-1]
+# declare -p A B C
+
+declare -i step=1
+while :; do
+    draw
+    read -p "${GREEN}Ход #${step}. ${ORANGE}Введите откуда и куда переставить (q - для выхода) ${RESET}" u
+    u="${u^^}"
+    case "${u}" in
+        Q) echo "${BLINK}${CYAN}Спасибо за игру${RESET}"; exit 1; ;;
+        *)
+            if ! [[ "${u}" =~ ^[ABC]" "*[ABC]$ ]]; then
+                echo "${RED}\"${u}\" не является корректным вводом${RESET}"; continue;
+            fi
+
+            declare -n from="${u:0:1}" to="${u: -1}"
+            if [[ ${!from} == ${!to} || ${#from[@]} == 0 || ${#to[@]} != 0 && ${from[-1]} > ${to[-1]} ]]; then
+                echo "${RED}Перемещение из ${!from} в ${!to} не является корректным${RESET}"; continue;
+            fi
+            
+            to+=(${from[-1]})
+            unset ${!from}[-1]
+
+            check=true
+            for i in $n_seq; do
+                if [ $((${to[$i]} + $i)) != $n ]; then check=false; break; fi
+            done
+            if $check; then echo "${GREEN}${BLINK}Поздравляю, вы решили за ${step} шагов!!!${RESET}"; draw; break; fi
+
+            step+=1
+        ;;
+    esac
+    
+
+done
