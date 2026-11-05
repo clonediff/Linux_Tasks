@@ -1,0 +1,61 @@
+#!/usr/bin/bash
+
+RED=$'\e[31m'
+GREEN=$'\e[32m'
+ORANGE=$'\e[33m'
+CYAN=$'\e[96m'
+RESET=$'\e[0m'
+BLINK=$'\e[5m'
+
+error_msg() {
+    echo "${RED}error:${RESET} $1" >&2 
+    echo "Usage: mkarch -d dir_path -n name" >&2
+    exit 1
+}
+
+dir_path="" name=""
+while getopts ":d:n:" opt; do
+    case "$opt" in
+        d)
+            if [[ -z $OPTARG || ! -d $OPTARG ]]; then error_msg "Passed directory '$OPTARG' doesn't exist"; fi
+            dir_path=$OPTARG
+        ;;
+        n)
+            if [[ -z $OPTARG ]]; then error_msg "Parameter -n can't be empty"; fi
+            name=$OPTARG
+        ;;
+        :) error_msg "Parameter '-${OPTARG}' should passed with argument" ;;
+        ?) error_msg "Unexpected parameter '-${OPTARG}'" ;;
+    esac
+done
+
+cat > "$name" << 'EOF'
+#!/usr/bin/bash
+
+error_msg() {
+    echo "${RED}error:${RESET} $1" >&2 
+    echo "Usage: $0 -o unpackdir" >&2
+    exit 1
+}
+
+unpackdir="."
+while getopts ":o:" opt; do
+    case "$opt" in
+        o)
+            if [[ -z $OPTARG ]]; then error_msg "Passed directory '$OPTARG' doesn't exist"; fi
+            unpackdir=$OPTARG
+        ;;
+        :) error_msg "Parameter '-${OPTARG}' should passed with argument" ;;
+        ?) error_msg "Unexpected parameter '-${OPTARG}'" ;;
+    esac
+done
+
+mkdir -p $unpackdir
+
+tail -n +26 "$0" | base64 -d | tar -xzf - -C "$unpackdir"
+exit 0
+
+EOF
+
+tar -czf - -C "$dir_path" . | base64 >> "$name"
+chmod +x "$name"
