@@ -1,0 +1,27 @@
+#!/usr/bin/bash
+
+RED=$'\e[31m'
+GREEN=$'\e[32m'
+ORANGE=$'\e[33m'
+CYAN=$'\e[96m'
+RESET=$'\e[0m'
+BLINK=$'\e[5m'
+
+error_msg() {
+    echo "${RED}error:${RESET} $1" >&2 
+    echo "Usage: addline <dirpath>" >&2
+    exit 1
+}
+
+if (($# != 1)); then error_msg "Must be passed exactly 1 parameter"; fi
+if [[ -z $1 || ! -d $1 ]]; then error_msg "Passed directory '$1' doesn't exist"; fi
+dirpath=$1
+user_name=$(id -un)
+today=$(date +%F)
+
+for f in "$dirpath"/* "$dirpath"/.*; do
+    if [[ ! -f $f || -L $f ]]; then continue; fi
+    if [[ "$f" != *.txt ]]; then continue; fi
+
+    echo -e "Approved ${user_name} ${today}\n$(cat "$f")" > "$f"
+done
