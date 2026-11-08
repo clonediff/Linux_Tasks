@@ -1,0 +1,42 @@
+#!/usr/bin/bash
+
+RED=$'\e[31m'
+GREEN=$'\e[32m'
+ORANGE=$'\e[33m'
+CYAN=$'\e[96m'
+RESET=$'\e[0m'
+BLINK=$'\e[5m'
+
+error_msg() {
+    echo "${RED}error:${RESET} $1" >&2 
+    echo "Usage: stsuf <dirpath>" >&2
+    exit 1
+}
+traverse() {
+    declare -n res=$2
+    for f in "$1"/* "$1"/.*; do
+        if [[ -L $f ]]; then continue; fi
+        if [[ -d $f ]]; then traverse "$f" $2;
+        elif [[ -f $f ]]; then res+=("$f"); fi
+    done
+}
+
+if (($# != 1)); then error_msg "Must be passed exactly 1 parameter"; fi
+if [[ -z $1 || ! -d $1 ]]; then error_msg "Passed directory '$1' doesn't exist"; fi
+dirpath=$1
+
+declare -A result=()
+traverse "$dirpath" files
+for f in "${files[@]}"; do
+    name=${f##*/}
+    ext=${name##*.}
+    if [[ "$ext" == "$name" || $name == .* && $name != .*.* ]]; then ext="no suffix";
+    else ext=.$ext; fi
+    result["$ext"]=$(( ${result["$ext"]:-0} + 1))
+    # declare -p result
+    # echo "$f $name \"$ext\""
+done
+
+for ext in "${!result[@]}"; do
+    echo "${ext}: ${result[$ext]}"
+done | sort -t : -k 2 -r -n
