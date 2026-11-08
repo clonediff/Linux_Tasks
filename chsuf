@@ -1,0 +1,40 @@
+#!/usr/bin/bash
+
+RED=$'\e[31m'
+GREEN=$'\e[32m'
+ORANGE=$'\e[33m'
+CYAN=$'\e[96m'
+RESET=$'\e[0m'
+BLINK=$'\e[5m'
+
+error_msg() {
+    echo "${RED}error:${RESET} $1" >&2 
+    echo "Usage: chsuf <dirpath> <old_suf> <new_suf>" >&2
+    exit 1
+}
+is_valid_suffix() { [[ $1 =~ ^\.[^\.]+$ ]]; }
+traverse() {
+    declare -n res=$2
+    for f in "$1"/* "$1"/.*; do
+        if [[ -L $f ]]; then continue; fi
+        if [[ -d $f ]]; then traverse "$f" $2;
+        elif [[ -f $f ]]; then res+=("$f"); fi
+    done
+}
+
+if (($# != 3)); then error_msg "Must be passed exactly 3 parameters"; fi
+if [[ -z $1 || ! -d $1 ]]; then error_msg "Passed directory '$1' doesn't exist"; fi
+if ! is_valid_suffix "$2" || ! is_valid_suffix "$3"; then error_msg "Suffixes must be valid, passed old: ${2}; new: ${3}"; fi
+dirpath=$1 old_suf=$2 new_suf=$3
+
+traverse "$dirpath" files
+for f in "${files[@]}"; do
+    name=${f##*/} ext=${name##*.}
+    if [[ $name == .* && $name != .*.* || $name == $ext || .$ext != $old_suf ]]; then
+        echo "${ORANGE}$f skipped${RESET}"; continue;
+    fi
+    new_f="${f%${old_suf}}${new_suf}"
+    if [ "$f" == "$new_f" ]; then continue; fi
+    echo "Rename $f -> $new_f"
+    mv "$f" "$new_f"
+done
