@@ -38,6 +38,7 @@ while :; do
         if [[ $n == *"${u:i:1}"* ]]; then cows+=1; fi
         if [[ ${n:i:1} == ${u:i:1} ]]; then bulls+=1; fi
     done
+    cows=($cows-$bulls)
 
     echo -e "Коров: ${cows}\tБыков: ${bulls}"
     history[${step},0]=$u
@@ -53,7 +54,7 @@ while :; do
     done
 
     step+=1
-    echo $n $u
+    # echo $n $u
 done
 
 # 1. Сценарий должен сформировать случайное 4-х значное число с неповторяющимися цифрами (загаданное число).

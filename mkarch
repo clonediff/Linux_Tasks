@@ -28,6 +28,7 @@ while getopts ":d:n:" opt; do
         ?) error_msg "Unexpected parameter '-${OPTARG}'" ;;
     esac
 done
+if [[ -z $dir_path || -z $name ]]; then error_msg "Incorrect usage"; fi 
 
 cat > "$name" << 'EOF'
 #!/usr/bin/bash

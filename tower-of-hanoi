@@ -7,6 +7,8 @@ CYAN=$'\e[96m'
 RESET=$'\e[0m'
 BLINK=$'\e[5m'
 
+trap 'echo; echo "${RED}Чтобы выйти введите q или Q.${RESET}";' INT
+
 draw() {
     for i in $n_seq; do echo "|${A[$i]:-" "}| |${B[$i]:-" "}| |${C[$i]:-" "}|"; done
     echo "+-+ +-+ +-+"
@@ -41,9 +43,12 @@ while :; do
             unset ${!from}[-1]
 
             check=true
-            for i in $n_seq; do
-                if [ $((${to[$i]} + $i)) != $n ]; then check=false; break; fi
-            done
+            if [ ${!to} == 'A' ]; then check=false;
+            else
+                for i in $n_seq; do
+                    if [ $((${to[$i]} + $i)) != $n ]; then check=false; break; fi
+                done
+            fi
             if $check; then echo "${GREEN}${BLINK}Поздравляю, вы решили за ${step} шагов!!!${RESET}"; draw; break; fi
 
             step+=1
